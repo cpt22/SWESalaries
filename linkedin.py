@@ -7,8 +7,8 @@ from selenium.common.exceptions import NoSuchElementException, ElementNotInterac
 from pynput.keyboard import Key, Controller
 from common import *
 
-SOURCE = 'TEST'
-# SOURCE = 'linkedin'
+# SOURCE = 'TEST'
+SOURCE = 'linkedin'
 
 
 # WHEN SELENIUM IS RUNNING, DON'T CLICK AROUND OTHER TABS, THIS WILL BREAK PROGRAM
@@ -23,7 +23,7 @@ def main():
     keyboard = Controller()
 
     load_more_jobs = 0
-    num_jobs_to_search = 25
+    num_jobs_to_search = 300
     num_jobs_searched_so_far = 0
     load_more_jobs_text = 'infinite-scroller__show-more-button infinite-scroller__show-more-button--visible'
 
@@ -33,35 +33,39 @@ def main():
         job_list = driver.find_elements(By.CLASS_NAME, 'base-card__full-link')
         for i in range(num_jobs_searched_so_far, len(job_list)):
             job_list[i].click()
-            sleep(3)  # CHANGE THIS TO MAKE IT CLICK ON NEXT PAGE FASTER. CAREFUL IF THE PAGE DOESN'T LOAD THOUGH
+            sleep(2.5)  # CHANGE THIS TO MAKE IT CLICK ON NEXT PAGE FASTER. CAREFUL IF THE PAGE DOESN'T LOAD THOUGH
             num_jobs_searched_so_far += 1
 
             # Try to load more jobs
             try:
-                driver.find_element(By.XPATH, '/html/body/div[1]/div/main/section[2]/button').click()  # Load More Jobs
-                sleep(2)
-            # If not possible, then get the current job
-            except ElementNotInteractableException:
-                try:
-                    # Get salary stuff
-                    num_jobs_searched_so_far += 1
-                    company = driver.find_element(By.CLASS_NAME, 'topcard__org-name-link').text
-                    company = company if company else None
-                    job_position = driver.find_element(By.CLASS_NAME, 'top-card-layout__title').text
-                    location = driver.find_element(By.XPATH,
+                # Get salary stuff
+                num_jobs_searched_so_far += 1
+                company = driver.find_element(By.CLASS_NAME, 'topcard__org-name-link').text
+                company = company if company else None
+                job_position = driver.find_element(By.CLASS_NAME, 'top-card-layout__title').text
+                location = driver.find_element(By.XPATH,
                                                    '/html/body/div[1]/div/section/div[2]/section/div/div[1]/div/h4/div[1]/span[2]').text  # [8:-1] gets location
-                    salary = process_linkedin_salary(driver)
-                    job_description = driver.find_element(By.CLASS_NAME,
+                salary = process_linkedin_salary(driver)
+                job_description = driver.find_element(By.CLASS_NAME,
                                                           'show-more-less-html__markup').text  # Job Description
-                    techs = extract_technologies(job_description)
-                    print(
-                        "Company: " + str(company) + ". Job Position: " + job_position + ". Location: " + location + ". Salary: " + str(
-                            salary))
-                    save_data({'company': company, 'salary': salary, 'position': job_position, 'technologies': techs,
-                               'location': location}, source=SOURCE)
-                except NoSuchElementException as ex:
-                    print(f'There was an error: {str(ex)}')
+                techs = extract_technologies(job_description)
+                print(
+                    "Company: " + str(company) + ". Job Position: " + job_position + ". Location: " + location + ". Salary: " + str(
+                        salary))
+                save_data({'company': company, 'salary': salary, 'position': job_position, 'technologies': techs,
+                           'location': location}, source=SOURCE)
+            # If not possible, then get the current job
+            except NoSuchElementException as ex:
+                print(f'There was an error: {str(ex)}')
+        try:
+            driver.find_element(By.XPATH, '/html/body/div[1]/div/main/section[2]/button').click()  # Load More Jobs
+            sleep(2)
+            print("LOADING MORE")
+        except ElementNotInteractableException as ex:
+            print(f'There was an error: {str(ex)}')
+                    
         # Load more jobs by pressing space
+        print("PRESSING SPACE")
         keyboard.press(Key.space)
         keyboard.release(Key.space)
         sleep(2)

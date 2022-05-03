@@ -8,10 +8,10 @@ from selenium.common.exceptions import NoSuchElementException, ElementNotInterac
 from pynput.keyboard import Key, Controller
 import re
 
-SOURCE = 'TEST'
-# SOURCE = 'glassdoor'
+# SOURCE = 'TEST'
+SOURCE = 'glassdoor'
 
-NUM_PAGES = 15
+NUM_PAGES = 50
 
 
 # WHEN SELENIUM IS RUNNING, DON'T CLICK AROUND OTHER TABS, THIS WILL BREAK PROGRAM
@@ -91,7 +91,7 @@ def process(driver):
     techs = extract_technologies(
         job_description)
     salary = process_salary(driver)
-    company = process_company(driver.find_element(By.CLASS_NAME, 'css-xuk5ye').text)
+    company = process_company(driver, driver.find_element(By.CLASS_NAME, 'css-xuk5ye').text)
     title = driver.find_element(By.CLASS_NAME, 'css-1j389vi').text
     location = driver.find_element(By.CLASS_NAME, 'css-56kyx5').text
     location = None if location == "" else location

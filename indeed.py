@@ -5,7 +5,8 @@ from time import sleep
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException
+from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException, \
+    ElementClickInterceptedException
 from pynput.keyboard import Key, Controller
 from selenium.webdriver.support import expected_conditions as EC
 import re
@@ -13,7 +14,7 @@ import re
 SOURCE = 'TEST'
 # SOURCE = 'indeed'
 
-NUM_PAGES = 1
+NUM_PAGES = 4
 SEARCH_TIMEOUT = 4
 
 
@@ -26,6 +27,16 @@ def main():
     driver = webdriver.Chrome(webdriver_manager.chrome.ChromeDriverManager().install())
     driver.get(url)
     keyboard = Controller()
+
+    try:
+        checkbox = driver.find_element(By.ID, 'checkbox')
+        checkbox.click()
+        submit = driver.find_element(By.CSS_SELECTOR, '')
+        sleep(10)
+        submit.click()
+    except NoSuchElementException:
+        pass
+
     driver.implicitly_wait(SEARCH_TIMEOUT)
 
     keyboard.press(Key.esc)
@@ -41,8 +52,15 @@ def main():
         jobs_on_page = driver.find_elements(By.CLASS_NAME, 'tapItem')
 
         for job_card in jobs_on_page:
-            job_card.click()
-            sleep(1.5)
+            count = 0
+            #while count < 5:
+            try:
+                job_card.click()
+            except ElementClickInterceptedException:
+                keyboard.press(Key.esc)
+                keyboard.release(Key.esc)
+                sleep(0.25)
+                #count += 1
             # keyboard.press(Key.esc)
             # keyboard.release(Key.esc)
             # keyboard.press(Key.esc)
@@ -70,14 +88,24 @@ def process(driver, job_card):
     driver.switch_to.frame("vjs-container-iframe")
     element = driver.find_element(By.ID, 'viewJobSSRRoot')
     job_description = element.find_element(By.ID, 'jobDescriptionText').text.lower()
-    rating_section = element.find_element(By.CLASS_NAME, 'jobsearch-InlineCompanyRating')
     techs = extract_technologies(job_description)
+    subheader = element.find_element(By.CLASS_NAME, 'jobsearch-JobInfoHeader-subtitle')
+    location = process_location(subheader)
+    company = process_company(subheader)
     title = element.find_element(By.CLASS_NAME, 'jobsearch-JobInfoHeader-title').text.split('\n')[0]
-    print(salary)
+    save_data({'company': company, 'salary': salary, 'position': title, 'technologies': techs,
+               'location': location}, source=SOURCE)
 
 
-def process_company_name(section):
-    return ''
+def process_location(section):
+    text = section.find_element(By.XPATH, 'div[2]').text
+    res = re.search(r'remote|[A-za-z ]+(?:, [A-Za-z ]+)?', text, flags=re.IGNORECASE)
+    return res.group() if res else None
+
+
+def process_company(section):
+    text = section.find_element(By.XPATH, 'div[1]').text
+    return text.split('\n')[0]
 
 
 def process_salary(driver, section):

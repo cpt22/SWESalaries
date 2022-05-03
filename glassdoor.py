@@ -92,10 +92,10 @@ def process(driver):
         job_description)
     salary = process_salary(driver)
     company = process_company(driver.find_element(By.CLASS_NAME, 'css-xuk5ye').text)
-    job_position = driver.find_element(By.CLASS_NAME, 'css-1j389vi').text
+    title = driver.find_element(By.CLASS_NAME, 'css-1j389vi').text
     location = driver.find_element(By.CLASS_NAME, 'css-56kyx5').text
     location = None if location == "" else location
-    save_data({'company': company, 'salary': salary, 'position': job_position, 'technologies': techs,
+    save_data({'company': company, 'salary': salary, 'position': title, 'technologies': techs,
                'location': location}, source=SOURCE)
 
 

@@ -44,12 +44,12 @@ def main():
             while count < 25:
                 try:
                     driver.find_element(By.CLASS_NAME, 'jobDescriptionContent')
-                    count += 1
                     break
                 except Exception:
                     sleep(0.1)
+                    count += 1
 
-            # Continue to next card if there was an issue loading one
+        # Continue to next card if there was an issue loading one
             if count >= 25:
                 continue
 
@@ -89,7 +89,7 @@ def process(driver):
     job_description = driver.find_element(By.CLASS_NAME,
                                           'jobDescriptionContent').text.lower()  # THIS IS JOB DESCRIPTION
     techs = extract_technologies(
-        job_description)  # TODO: Extract Programming Languages from Job Description
+        job_description)
     salary = process_salary(driver)
     company = process_company(driver.find_element(By.CLASS_NAME, 'css-xuk5ye').text)
     job_position = driver.find_element(By.CLASS_NAME, 'css-1j389vi').text

@@ -1,3 +1,5 @@
+from selenium.webdriver import ActionChains
+
 from common import *
 import webdriver_manager.chrome
 from selenium import webdriver
@@ -6,15 +8,15 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException, \
-    ElementClickInterceptedException
+    ElementClickInterceptedException, StaleElementReferenceException
 from pynput.keyboard import Key, Controller
 from selenium.webdriver.support import expected_conditions as EC
 import re
 
-SOURCE = 'TEST'
-# SOURCE = 'indeed'
+# SOURCE = 'TEST'
+SOURCE = 'indeed'
 
-NUM_PAGES = 4
+NUM_PAGES = 15
 SEARCH_TIMEOUT = 4
 
 
@@ -29,11 +31,18 @@ def main():
     keyboard = Controller()
 
     try:
-        checkbox = driver.find_element(By.ID, 'checkbox')
-        checkbox.click()
-        submit = driver.find_element(By.CSS_SELECTOR, '')
-        sleep(10)
-        submit.click()
+        iframe = driver.find_element(By.XPATH, "/html/body/form/div/iframe")
+        driver.execute_script("window.open('');")
+        driver.switch_to.default_content()
+        sleep(2)
+        size = 2
+        while size == 2:
+            tabs = driver.window_handles
+            size = len(tabs)
+            sleep(0.1)
+
+        driver.find_element(By.TAG_NAME, 'input').click()
+        sleep(8)
     except NoSuchElementException:
         pass
 
@@ -55,17 +64,16 @@ def main():
             count = 0
             #while count < 5:
             try:
+                sleep(1)
                 job_card.click()
-            except ElementClickInterceptedException:
+            except (ElementClickInterceptedException, ElementNotInteractableException):
                 keyboard.press(Key.esc)
                 keyboard.release(Key.esc)
                 sleep(0.25)
-                #count += 1
-            # keyboard.press(Key.esc)
-            # keyboard.release(Key.esc)
-            # keyboard.press(Key.esc)
-            # keyboard.release(Key.esc)
-            # sleep(0.25)
+            except StaleElementReferenceException:
+                print("STALE ELEMENT")
+                continue
+
             try:
                 process(driver, job_card)
                 num_jobs_searched += 1
@@ -79,6 +87,7 @@ def main():
         if num_pages_searched >= num_pages_to_search:
             break
         else:
+            sleep(1)
             driver.find_element(By.CSS_SELECTOR, '[aria-label=Next]').click()
             sleep(5)
 

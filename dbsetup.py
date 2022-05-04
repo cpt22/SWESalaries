@@ -1,5 +1,6 @@
 from common import *
 
+
 def main():
     # Create technologies table
     c.execute(''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='techs' ''')

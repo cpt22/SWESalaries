@@ -4,6 +4,8 @@ import re
 conn = sqlite3.connect('data.db')
 c = conn.cursor()
 
+technologies = None
+
 
 def load_techs():
     c.row_factory = sqlite3.Row
@@ -33,7 +35,10 @@ def save_data(data, source=''):
 
 # Helper function to extract programming languages from the job description text
 def extract_technologies(job_description):
+    global technologies
     temp = set()
+    if technologies is None:
+        technologies = load_techs()
     for tech, reg in technologies.items():
         if re.search(reg, job_description, flags=re.IGNORECASE) is not None:
             temp.add(tech)
@@ -55,7 +60,4 @@ def deduplicate(source):
     )''')
     conn.commit()
     print("Database Deduplicated")
-
-
-technologies = load_techs()
 

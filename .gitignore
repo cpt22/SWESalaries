@@ -3,3 +3,4 @@ data.db
 data.db-journal
 salaries.csv
 .DS_Store
+*.png

@@ -17,12 +17,13 @@ import re
 SOURCE = 'indeed'
 
 NUM_PAGES = 15
+NUM_RECORDS = 400
 SEARCH_TIMEOUT = 4
 
 
 def main():
     # Clean up old entries from running script
-    c.execute(f"DELETE FROM positions WHERE source='{SOURCE}'")
+    deduplicate(SOURCE)
 
     # Initialize Driver
     url = 'https://www.indeed.com/jobs?q=software%20engineer'
@@ -52,6 +53,7 @@ def main():
     keyboard.release(Key.esc)
 
     num_pages_to_search = NUM_PAGES
+    num_jobs_to_search = NUM_RECORDS
     num_pages_searched = 0
     num_jobs_searched = 0
 
@@ -75,8 +77,9 @@ def main():
                 continue
 
             try:
-                process(driver, job_card)
-                num_jobs_searched += 1
+                if process(driver, job_card):
+                    num_jobs_searched += 1
+                    print("Num Records: " + str(num_jobs_searched))
             except Exception as ex:
                 print(f'There was an error: {str(ex)}')
             finally:
@@ -84,12 +87,15 @@ def main():
 
         num_pages_searched += 1
 
-        if num_pages_searched >= num_pages_to_search:
+        if num_jobs_searched >= num_jobs_to_search:
             break
         else:
             sleep(1)
             driver.find_element(By.CSS_SELECTOR, '[aria-label=Next]').click()
             sleep(5)
+
+    deduplicate(SOURCE)
+    print("Finished Scraping")
 
 
 def process(driver, job_card):
@@ -102,7 +108,7 @@ def process(driver, job_card):
     location = process_location(subheader)
     company = process_company(subheader)
     title = element.find_element(By.CLASS_NAME, 'jobsearch-JobInfoHeader-title').text.split('\n')[0]
-    save_data({'company': company, 'salary': salary, 'position': title, 'technologies': techs,
+    return save_data({'company': company, 'salary': salary, 'position': title, 'technologies': techs,
                'location': location}, source=SOURCE)
 
 

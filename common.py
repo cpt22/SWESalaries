@@ -25,8 +25,10 @@ def save_data(data, source=''):
             linkers.append((new_id, tech))
         c.executemany(tech_query, linkers)
         conn.commit()
+        return True
     else:
         print("Failed to save entry")
+        return False
 
 
 # Helper function to extract programming languages from the job description text
@@ -36,6 +38,23 @@ def extract_technologies(job_description):
         if re.search(reg, job_description, flags=re.IGNORECASE) is not None:
             temp.add(tech)
     return list(temp)
+
+
+def deduplicate(source):
+    c.execute(f'''DELETE FROM positions WHERE id IN (
+        SELECT p2.id
+        FROM positions p1
+        JOIN positions p2
+            ON p1.name = p2.name
+                   AND p1.company = p2.company
+                   AND p1.location = p2.location
+                   AND p1.salary = p2.salary
+                   AND p1.id <> p2.id
+                   AND p1.source='{source}'
+                   AND p2.source='{source}'
+    )''')
+    conn.commit()
+    print("Database Deduplicated")
 
 
 technologies = load_techs()

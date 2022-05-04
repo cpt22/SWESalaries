@@ -8,7 +8,7 @@ from pynput.keyboard import Key, Controller
 from common import *
 
 # SOURCE = 'TEST'
-SOURCE = 'linkedin'
+SOURCE = 'linkedin-temp'
 
 
 # WHEN SELENIUM IS RUNNING, DON'T CLICK AROUND OTHER TABS, THIS WILL BREAK PROGRAM
@@ -23,7 +23,7 @@ def main():
     keyboard = Controller()
 
     load_more_jobs = 0
-    num_jobs_to_search = 300
+    num_jobs_to_search = 800
     num_jobs_searched_so_far = 0
     load_more_jobs_text = 'infinite-scroller__show-more-button infinite-scroller__show-more-button--visible'
 
@@ -39,7 +39,6 @@ def main():
             # Try to load more jobs
             try:
                 # Get salary stuff
-                num_jobs_searched_so_far += 1
                 company = driver.find_element(By.CLASS_NAME, 'topcard__org-name-link').text
                 company = company if company else None
                 job_position = driver.find_element(By.CLASS_NAME, 'top-card-layout__title').text
@@ -52,8 +51,9 @@ def main():
                 print(
                     "Company: " + str(company) + ". Job Position: " + job_position + ". Location: " + location + ". Salary: " + str(
                         salary))
-                save_data({'company': company, 'salary': salary, 'position': job_position, 'technologies': techs,
-                           'location': location}, source=SOURCE)
+                if save_data({'company': company, 'salary': salary, 'position': job_position, 'technologies': techs,
+                           'location': location}, source=SOURCE):
+                    num_jobs_searched_so_far += 1
             # If not possible, then get the current job
             except NoSuchElementException as ex:
                 print(f'There was an error: {str(ex)}')
